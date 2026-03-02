@@ -1,0 +1,41 @@
+<form method="POST">
+    {% csrf_token %}
+    <div class="row mb-4">
+        <div class="col">
+            <label>Supplier</label>
+            <select name="supplier" class="form-select">
+                {% for s in suppliers %}<option value="{{s.id}}">{{s.name}}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col"><input type="text" name="invoice" placeholder="Invoice #" class="form-control"></div>
+        <div class="col"><input type="date" name="date" class="form-control"></div>
+    </div>
+
+    <table class="table border" id="itemTable">
+        <thead><tr><th>Product</th><th>Qty</th><th>Rate</th><th>Action</th></tr></thead>
+        <tbody>
+            <tr>
+                <td>
+                    <select name="product_id[]" class="form-select">
+                        {% for p in products %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}
+                    </select>
+                </td>
+                <td><input type="number" name="qty[]" class="form-control"></td>
+                <td><input type="number" name="rate[]" class="form-control"></td>
+                <td><button type="button" class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">X</button></td>
+            </tr>
+        </tbody>
+    </table>
+    <button type="button" class="btn btn-info" onclick="addRow()">+ Add Product</button>
+    <button type="submit" class="btn btn-success float-end">Save Invoice</button>
+</form>
+
+<script>
+function addRow() {
+    var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
+    var row = table.rows[0].cloneNode(true);
+    // Clear inputs in cloned row
+    row.querySelectorAll('input').forEach(input => input.value = '');
+    table.appendChild(row);
+}
+</script>

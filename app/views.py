@@ -1,61 +1,16 @@
-from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Product, Purchase
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from .models import Product, Purchase
 
-# Create your views here.
-# Index Page
+# 1. Index/Home
 def index(request):
     return render(request, 'index.html')
 
-# Product Master: View & Add
-@login_required
-def product_list(request):
-    products = Product.objects.all()
-    if request.method == "POST":
-        Product.objects.create(
-            name=request.POST['name'],
-            category=request.POST['category'],
-            price=request.POST['price'],
-            tax_percentage=request.POST['tax']
-        )
-        return redirect('product_list')
-    return render(request, 'products.html', {'products': products})
-
-# Product Edit
-@login_required
-def edit_product(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    if request.method == "POST":
-        product.name = request.POST['name']
-        product.category = request.POST['category']
-        product.price = request.POST['price']
-        product.tax_percentage = request.POST['tax']
-        product.save()
-        return redirect('product_list')
-    return render(request, 'edit_product.html', {'product': product})
-
-# Purchase Form
-@login_required
-def purchase_form(request):
-    products = Product.objects.all()
-    if request.method == "POST":
-        Purchase.objects.create(
-            supplier_name=request.POST['supplier'],
-            date=request.POST['date'],
-            invoice_number=request.POST['invoice'],
-            product_id=request.POST['product'],
-            quantity=int(request.POST['qty']),
-            rate=float(request.POST['rate'])
-        )
-        return redirect('index')
-    return render(request, 'purchase.html', {'products': products})
-
-
+# 2. Registration
 def register(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
@@ -64,3 +19,92 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
+
+# 3. Product Master (View & Add)
+@login_required
+def product_master(request):
+    products = Product.objects.all()
+    if request.method == 'POST':
+        Product.objects.create(
+            name=request.POST['name'],
+            category=request.POST['category'],
+            price=request.POST['price'],
+            tax_percentage=request.POST['tax']
+        )
+        return redirect('product_master')
+    return render(request, 'products.html', {'products': products})
+
+# 4. Product Edit
+@login_required
+def edit_product(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        product.name = request.POST['name']
+        product.category = request.POST['category']
+        product.price = request.POST['price']
+        product.tax_percentage = request.POST['tax']
+        product.save()
+        return redirect('product_master')
+    return render(request, 'edit_product.html', {'product': product})
+
+# 5. Purchase Form
+@login_required
+def purchase_form(request):
+    products = Product.objects.all()
+    if request.method == 'POST':
+        Purchase.objects.create(
+            supplier_name=request.POST['supplier'],
+            date=request.POST['date'],
+            invoice_number=request.POST['invoice'],
+            product_id=request.POST['product'],
+            quantity=request.POST['qty'],
+            rate=request.POST['rate']
+        )
+        return redirect('index')
+    return render(request, 'purchase.html', {'products': products})
+
+@login_required
+def create_purchase(request):
+    suppliers = Supplier.objects.all()
+    products = Product.objects.all()
+
+    if request.method == "POST":
+        # 1. Create the Main Purchase Header
+        pur = Purchase.objects.create(
+            supplier_id=request.POST.get('supplier'),
+            date=request.POST.get('date'),
+            invoice_number=request.POST.get('invoice')
+        )
+
+        # 2. Get lists of items from the form
+        product_ids = request.POST.getlist('product_id[]')
+        qtys = request.POST.getlist('qty[]')
+        rates = request.POST.getlist('rate[]')
+
+        total_invoice_amt = 0
+
+        # 3. Loop through and save each row
+        for i in range(len(product_ids)):
+            prod = Product.objects.get(id=product_ids[i])
+            q = int(qtys[i])
+            r = float(rates[i])
+            
+            sub = q * r
+            tax = (sub * float(prod.tax_percentage)) / 100
+            
+            PurchaseItem.objects.create(
+                purchase=pur,
+                product=prod,
+                quantity=q,
+                rate=r,
+                tax_amount=tax,
+                sub_total=sub + tax
+            )
+            total_invoice_amt += (sub + tax)
+
+        # Update the header total
+        pur.grand_total = total_invoice_amt
+        pur.save()
+        return redirect('index')
+
+    return render(request, 'purchase.html', {'suppliers': suppliers, 'products': products})
