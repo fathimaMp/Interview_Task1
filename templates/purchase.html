@@ -1,41 +1,83 @@
-<form method="POST">
-    {% csrf_token %}
-    <div class="row mb-4">
-        <div class="col">
-            <label>Supplier</label>
-            <select name="supplier" class="form-select">
-                {% for s in suppliers %}<option value="{{s.id}}">{{s.name}}</option>{% endfor %}
-            </select>
+{% extends 'index.html' %}
+{% block content %}
+<div class="container py-3" style="max-width: 900px;"> <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-dark text-white py-2"> <h5 class="mb-0 fw-bold small"><i class="bi bi-cart-plus me-2"></i> New Purchase</h5>
         </div>
-        <div class="col"><input type="text" name="invoice" placeholder="Invoice #" class="form-control"></div>
-        <div class="col"><input type="date" name="date" class="form-control"></div>
-    </div>
 
-    <table class="table border" id="itemTable">
-        <thead><tr><th>Product</th><th>Qty</th><th>Rate</th><th>Action</th></tr></thead>
-        <tbody>
-            <tr>
-                <td>
-                    <select name="product_id[]" class="form-select">
-                        {% for p in products %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}
-                    </select>
-                </td>
-                <td><input type="number" name="qty[]" class="form-control"></td>
-                <td><input type="number" name="rate[]" class="form-control"></td>
-                <td><button type="button" class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">X</button></td>
-            </tr>
-        </tbody>
-    </table>
-    <button type="button" class="btn btn-info" onclick="addRow()">+ Add Product</button>
-    <button type="submit" class="btn btn-success float-end">Save Invoice</button>
-</form>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="card-body bg-light p-3"> <div class="row g-2 mb-3 p-2 bg-white rounded shadow-sm">
+                    <div class="col-md-4">
+                        <label class="form-label mb-1" style="font-size: 0.8rem; font-weight: 600;">Supplier</label>
+                        <select name="supplier" class="form-select form-select-sm" required>
+                            <option value="" selected disabled>Select...</option>
+                            {% for s in suppliers %}<option value="{{s.id}}">{{s.name}}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label mb-1" style="font-size: 0.8rem; font-weight: 600;">Invoice #</label>
+                        <input type="text" name="invoice" placeholder="INV-1001" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label mb-1" style="font-size: 0.8rem; font-weight: 600;">Date</label>
+                        <input type="date" name="date" class="form-control form-control-sm" required>
+                    </div>
+                </div>
+
+                <div class="table-responsive bg-white rounded shadow-sm p-2">
+                    <table class="table table-sm table-hover align-middle mb-0" id="itemTable">
+                        <thead class="table-light">
+                            <tr style="font-size: 0.85rem;">
+                                <th style="width: 45%;">Product</th>
+                                <th style="width: 15%;">Qty</th>
+                                <th style="width: 25%;">Rate (₹)</th>
+                                <th class="text-center" style="width: 15%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <select name="product_id[]" class="form-select form-select-sm border-0 bg-light">
+                                        {% for p in products %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" name="qty[]" class="form-control form-control-sm text-center" min="1" required></td>
+                                <td><input type="number" name="rate[]" step="0.01" class="form-control form-control-sm" required></td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="removeRow(this)">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 mt-1" onclick="addRow()" style="font-size: 0.8rem;">
+                        + Add Row
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-footer bg-white py-2 d-flex justify-content-between align-items-center">
+                <span class="text-muted" style="font-size: 0.75rem;">Saving as a single invoice.</span>
+                <button type="submit" class="btn btn-success btn-sm px-4 fw-bold">
+                    Save Invoice
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
 function addRow() {
     var table = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
-    var row = table.rows[0].cloneNode(true);
-    // Clear inputs in cloned row
-    row.querySelectorAll('input').forEach(input => input.value = '');
-    table.appendChild(row);
+    var newRow = table.rows[0].cloneNode(true);
+    newRow.querySelectorAll('input').forEach(i => i.value = '');
+    table.appendChild(newRow);
+}
+function removeRow(btn) {
+    var tbody = document.getElementById("itemTable").getElementsByTagName('tbody')[0];
+    if (tbody.rows.length > 1) btn.closest('tr').remove();
+    else alert("Need at least 1 item.");
 }
 </script>
+{% endblock %}

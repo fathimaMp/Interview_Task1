@@ -1,26 +1,43 @@
-<h3>Product Master</h3>
-<form method="POST" class="row g-3 mb-4">
-    {% csrf_token %}
-    <div class="col-md-3"><input type="text" name="name" class="form-control" placeholder="Product Name" required></div>
-    <div class="col-md-3"><input type="text" name="category" class="form-control" placeholder="Category"></div>
-    <div class="col-md-2"><input type="number" step="0.01" name="price" class="form-control" placeholder="Price"></div>
-    <div class="col-md-2"><input type="number" step="0.01" name="tax" class="form-control" placeholder="Tax %"></div>
-    <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Save Product</button></div>
-</form>
+{% extends 'index.html' %}
+{% block content %}
+<div class="container mt-3" style="max-width: 950px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-dark mb-0">📦 Inventory</h4>
+    </div> <br>
 
-<table class="table table-striped">
-    <thead>
-        <tr><th>Name</th><th>Category</th><th>Price</th><th>Tax %</th><th>Action</th></tr>
-    </thead>
-    <tbody>
-        {% for p in products %}
-        <tr>
-            <td>{{ p.name }}</td>
-            <td>{{ p.category }}</td>
-            <td>{{ p.price }}</td>
-            <td>{{ p.tax_percentage }}%</td>
-            <td><a href="{% url 'edit_product' p.id %}" class="btn btn-sm btn-warning">Edit</a></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-secondary border-bottom">
+                    <tr class="small text-uppercase">
+                        <th class="ps-3 py-2">Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Tax</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr style="font-size: 0.9rem;">
+                        <td class="ps-3 fw-bold text-secondary">{{ p.name }}</td>
+                        <td><span class="badge bg-light text-muted border" style="font-size: 0.75rem;">{{ p.category }}</span></td>
+                        <td class="fw-semibold">₹{{ p.price }}</td>
+                        <td class="text-danger small">{{ p.tax_percentage }}%</td>
+                        <td class="text-center">
+                            <a href="{% url 'view_product' p.id %}" class="text-info me-2" title="View"><i class="bi bi-eye-fill"></i></a>
+                            <a href="{% url 'edit_product' p.id %}" class="text-warning" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-4 text-muted">Empty Inventory.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}
